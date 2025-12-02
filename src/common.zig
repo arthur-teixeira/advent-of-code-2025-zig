@@ -19,12 +19,8 @@ pub const Input = struct {
         const cwd = std.fs.cwd();
         const p = try path(allocator, day, example);
         const f = try cwd.openFile(p, .{ .mode = .read_only });
-        const stat = try f.stat();
-
-        const buf = try allocator.alloc(u8, stat.size);
-
-        var rdr = f.reader(buf);
-        try rdr.interface.fill(stat.size);
+        const buf = try allocator.alloc(u8, 64);
+        const rdr = f.reader(buf);
 
         return Input{
             .allocator = allocator,

@@ -41,4 +41,13 @@ pub fn build(b: *std.Build) void {
     if (b.args) |args| {
         run_cmd.addArgs(args);
     }
+
+    const day01_tests = b.addTest(.{
+        .root_module = mod_day_01,
+    });
+
+    const run_day01_tests = b.addRunArtifact(day01_tests);
+
+    const test_step = b.step("test", "Run tests");
+    test_step.dependOn(&run_day01_tests.step);
 }
