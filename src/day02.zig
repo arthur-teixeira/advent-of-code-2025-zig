@@ -9,7 +9,7 @@ pub fn solve(allocator: Allocator, example: bool) !void {
     const ranges = try parse(allocator, &input);
 
     std.debug.print("DAY 02\n", .{});
-    std.debug.print("\tPart 1: {d}\n", .{part01(ranges)});
+    std.debug.print("\tPart 1: {d}\n", .{try part01(allocator, ranges)});
 }
 
 const Range = struct { usize, usize };
@@ -27,25 +27,43 @@ fn parse(allocator: Allocator, input: *Input) !std.ArrayList(Range) {
     return ranges;
 }
 
-fn part01(ranges: std.ArrayList(Range)) usize {
+fn part01(allocator: Allocator, ranges: std.ArrayList(Range)) !usize {
+    var results = try allocator.alloc(usize, ranges.items.len);
+
+    var tp: std.Thread.Pool = undefined;
+    try std.Thread.Pool.init(&tp, .{
+        .allocator = allocator,
+        .n_jobs = std.Thread.getCpuCount() catch unreachable,
+    });
+
+    var wg = std.Thread.WaitGroup{};
+    for (ranges.items, 0..) |range, i| {
+        tp.spawnWg(&wg, do_part1_range, .{range, &results[i]});
+    }
+    wg.wait();
+
     var acc: usize = 0;
+    for (results) |i| acc += i;
+    return acc;
+}
 
-    for (ranges.items) |range| {
-        const start, const end = range;
-        for (start..end+1) |v| {
-            var buf: [50]u8 = undefined;
-            const str = std.fmt.bufPrint(&buf, "{d}", .{v}) catch unreachable;
-            if (str.len & 1 == 1) {
-                continue;
-            }
+fn do_part1_range(range: Range, result: *usize) void {
+    var acc: usize = 0;
+    const start, const end = range;
 
-            const middle = str.len / 2;
+    for (start..end+1) |v| {
+        var buf: [50]u8 = undefined;
+        const str = std.fmt.bufPrint(&buf, "{d}", .{v}) catch unreachable;
+        if (str.len & 1 == 1) {
+            continue;
+        }
 
-            if (std.mem.eql(u8, str[0..middle], str[middle..])) {
-                acc += v;
-            }
+        const middle = str.len / 2;
+
+        if (std.mem.eql(u8, str[0..middle], str[middle..])) {
+            acc += v;
         }
     }
 
-    return acc;
+    result.* = acc;
 }
