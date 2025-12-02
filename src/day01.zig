@@ -55,15 +55,12 @@ fn do_round(acc: i16, val: i16) Round {
     const round_result = acc + val;
     const new_acc = @mod(round_result, 100);
 
-
-    const num_zeroes: i16 = if (round_result <= 0 and acc != 0)
+    const num_zeroes: i16 = if (round_result <= 0 and acc == 0)
+        @divTrunc(-round_result, 100)
+    else if (round_result <= 0) 
         @divTrunc(-round_result, 100) + 1
-    else if (round_result >= 100)
-        @divTrunc(round_result, 100)
-    else if (new_acc == 0) 
-        1
     else 
-        0;
+        @divTrunc(round_result, 100);
 
     return .{ new_acc, num_zeroes };
 }
@@ -74,7 +71,6 @@ fn part02(moves: std.ArrayList(i16)) i16 {
 
     for (moves.items) |move_value| {
         const new_pos, const num_zeroes = do_round(pos, move_value);
-        std.debug.print("Moving from {d} by {d}, got to {d} passing 0 {d} times\n", .{pos, move_value, new_pos, num_zeroes});
         pos = new_pos;
         count += num_zeroes;
     }
@@ -83,51 +79,51 @@ fn part02(moves: std.ArrayList(i16)) i16 {
 }
 
 test "example test" {
-    const expect = std.testing.expect;
+    const expectEqual = std.testing.expectEqual;
 
     // L68
     var round = do_round(50, -68);
-    try expect(round[0] == 82);
-    try expect(round[1] == 1);
+    try expectEqual(round[0], 82);
+    try expectEqual(round[1], 1);
 
     // L30
     round = do_round(82, -30);
-    try expect(round[0] == 52);
-    try expect(round[1] == 0);
+    try expectEqual(round[0], 52);
+    try expectEqual(round[1], 0);
     // R48
     round = do_round(52, 48);
-    try expect(round[0] == 0);
-    try expect(round[1] == 1);
+    try expectEqual(round[0], 0);
+    try expectEqual(round[1], 1);
     // L5
     round = do_round(0, -5);
-    try expect(round[0] == 95);
-    try expect(round[1] == 0);
+    try expectEqual(round[0], 95);
+    try expectEqual(round[1], 0);
     // R60
     round = do_round(95, 60);
-    try expect(round[0] == 55);
-    try expect(round[1] == 1);
+    try expectEqual(round[0], 55);
+    try expectEqual(round[1], 1);
     // L55
     round = do_round(55, -55);
-    try expect(round[0] == 0);
-    try expect(round[1] == 1);
+    try expectEqual(round[0], 0);
+    try expectEqual(round[1], 1);
     // L1
     round = do_round(0, -1);
-    try expect(round[0] == 99);
-    try expect(round[1] == 0);
+    try expectEqual(round[0], 99);
+    try expectEqual(round[1], 0);
     // L99
     round = do_round(99, -99);
-    try expect(round[0] == 0);
-    try expect(round[1] == 1);
+    try expectEqual(round[0], 0);
+    try expectEqual(round[1], 1);
     // R14
     round = do_round(0, 14);
-    try expect(round[0] == 14);
-    try expect(round[1] == 0);
+    try expectEqual(round[0], 14);
+    try expectEqual(round[1], 0);
     // L82
     round = do_round(14, -82);
-    try expect(round[0] == 32);
-    try expect(round[1] == 1);
+    try expectEqual(round[0], 32);
+    try expectEqual(round[1], 1);
 
     round = do_round(50, 1000);
-    try expect(round[0] == 50);
-    try expect(round[1] == 10);
+    try expectEqual(round[0], 50);
+    try expectEqual(round[1], 10);
 }
