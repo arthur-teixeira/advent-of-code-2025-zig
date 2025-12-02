@@ -3,15 +3,19 @@ const std = @import("std");
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
-    const mod_day_01 = b.addModule("day01", .{
-        .root_source_file = b.path("src/day01.zig"),
-        .target = target,
-    });
-
     const mod_common = b.addModule("common", .{
         .root_source_file = b.path("src/common.zig"),
         .target = target,
     });
+
+    const mod_day_01 = b.addModule("day01", .{
+        .root_source_file = b.path("src/day01.zig"),
+        .target = target,
+        .imports = &.{
+            .{ .name = "common", .module = mod_common },
+        }
+    });
+
 
     const exe = b.addExecutable(.{
         .name = "advent_of_code_2025_zig",
@@ -21,7 +25,6 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
             .imports = &.{
                 .{ .name = "day01", .module = mod_day_01 },
-                .{ .name = "common", .module = mod_common },
             },
         }),
     });
