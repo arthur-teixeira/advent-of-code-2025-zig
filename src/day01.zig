@@ -32,8 +32,9 @@ pub fn solve(allocator: Allocator, example: bool) !void {
 
     const moves = try acc_moves(allocator, &input);
 
-    std.debug.print("Part 1 - {d}\n", .{part01(moves)});
-    std.debug.print("Part 2 - {d}\n", .{part02(moves)});
+    std.debug.print("DAY 01\n", .{});
+    std.debug.print("\tPart 1 - {d}\n", .{part01(moves)});
+    std.debug.print("\tPart 2 - {d}\n", .{part02(moves)});
 }
 
 fn part01(moves: std.ArrayList(i16)) i16 {

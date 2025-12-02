@@ -8,7 +8,6 @@ pub const Input = struct {
     allocator: Allocator,
     f: std.fs.File,
     reader: std.fs.File.Reader,
-    read_buf: []const u8,
 
     fn path(allocator: Allocator, day: []const u8, example: bool) ![]const u8 {
         const dir = if (example) ex else in;
@@ -19,13 +18,12 @@ pub const Input = struct {
         const cwd = std.fs.cwd();
         const p = try path(allocator, day, example);
         const f = try cwd.openFile(p, .{ .mode = .read_only });
-        const buf = try allocator.alloc(u8, 64);
+        const buf = try allocator.alloc(u8, 512);
         const rdr = f.reader(buf);
 
         return Input{
             .allocator = allocator,
             .reader = rdr,
-            .read_buf = buf,
             .f = f,
         };
     }
