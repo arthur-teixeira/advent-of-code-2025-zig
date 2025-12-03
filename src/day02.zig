@@ -16,12 +16,15 @@ pub fn solve(allocator: Allocator, bench: *Benchmark, example: bool) !void {
 
     std.debug.print("DAY 02\n", .{});
     t1.start();
-    std.debug.print("\tPart 1: {d}\n", .{try part01(arena_alloc, ranges)});
+    const p1 = try part01(arena_alloc, ranges);
     t1.finish();
     _ = arena.reset(.free_all);
     t2.start();
-    std.debug.print("\tPart 2: {d}\n", .{try part02(arena_alloc, ranges)});
+    const p2 = try part02(arena_alloc, ranges);
     t2.finish();
+
+    std.debug.print("\tPart 1: {d}\n", .{p1});
+    std.debug.print("\tPart 2: {d}\n", .{p2});
 }
 
 const Range = struct {
@@ -83,61 +86,34 @@ fn split_ranges(right: []const u8, left: []const u8, ranges: *std.ArrayList(Rang
 }
 
 fn part01(allocator: Allocator, ranges: std.ArrayList(Range)) !usize {
-    var results = try allocator.alloc(usize, ranges.items.len);
-
-    var tp: std.Thread.Pool = undefined;
-    try std.Thread.Pool.init(&tp, .{
-        .allocator = allocator,
-        .n_jobs = std.Thread.getCpuCount() catch unreachable,
-    });
-
-    var wg = std.Thread.WaitGroup{};
-    for (ranges.items, 0..) |range, i| {
-        tp.spawnWg(&wg, do_part1_range, .{range, &results[i]});
-    }
-    wg.wait();
-
     var acc: usize = 0;
-    for (results) |i| acc += i;
+    for (ranges.items) |range| {
+        acc += do_range(allocator, range, true);
+    }
     return acc;
-}
-
-fn do_part1_range(range: Range, result: *usize) void {
-    var acc: usize = 0;
-    const start, const end = range;
-
-    for (start..end+1) |v| {
-        var buf: [50]u8 = undefined;
-        const str = std.fmt.bufPrint(&buf, "{d}", .{v}) catch unreachable;
-        if (str.len & 1 == 1) {
-            continue;
-        }
-
-        const middle = str.len / 2;
-
-        if (std.mem.eql(u8, str[0..middle], str[middle..])) {
-            acc += v;
-        }
-    }
-
-    result.* = acc;
 }
 
 fn part02(allocator: Allocator, ranges: std.ArrayList(Range)) !usize {
-    var results = try allocator.alloc(usize, ranges.items.len);
-
-    for (ranges.items, 0..) |range, i| {
-        do_part2_range(allocator, range, &results[i]);
+    var acc: usize = 0;
+    for (ranges.items) |range| {
+        acc += do_range(allocator, range, false);
     }
 
-    var acc: usize = 0;
-    for (results) |i| acc += i;
     return acc;
 }
 
-fn divisors(n: usize, divs: []usize) usize {
+fn divisors(n: usize, divs: []usize, only_pair: bool) usize {
     const nn: usize = @divTrunc(n, 2) + 1;
     var j: usize = 0;
+
+    if (only_pair) {
+        if (n & 1 == 1) {
+            return 0;
+        }
+
+        divs[0] = n/2;
+        return 1;
+    }
 
     for (1..nn) |i| {
         if (n % i == 0) {
@@ -167,7 +143,6 @@ fn repeat(dest: []u8, src: usize, n: usize) usize {
     return i;
 }
 
-// TODO: Replace AutoArrayHashMap with a bitmap that has MAX(ranges.right) bits to reduce memory usage
 fn test_patterns(seen: *std.AutoArrayHashMap(usize, bool), div: usize, start_str: []const u8, end_str: []const u8, range: Range) usize {
     const pattern_start_str = start_str[0..div];
     const pattern_end_str = end_str[0..div];
@@ -189,7 +164,7 @@ fn test_patterns(seen: *std.AutoArrayHashMap(usize, bool), div: usize, start_str
     return acc;
 }
 
-fn do_part2_range(allocator: Allocator, range: Range, result: *usize) void {
+fn do_range(allocator: Allocator, range: Range, only_pair: bool) usize {
     var acc: usize = 0;
     const start, const end = range;
 
@@ -200,17 +175,21 @@ fn do_part2_range(allocator: Allocator, range: Range, result: *usize) void {
     const end_str = std.fmt.bufPrint(&end_buf, "{d}", .{end}) catch @panic("Buffer too small");
 
     var div_buffer: [10]usize = undefined;
-    const n_divs = divisors(start_str.len, &div_buffer);
+    const n_divs = divisors(start_str.len, &div_buffer, only_pair);
     const divs = div_buffer[0..n_divs];
 
     var seen = std.AutoArrayHashMap(usize, bool).init(allocator);
     defer seen.deinit();
 
     for (divs) |div| {
+        if (only_pair and start_str.len % div > 0) {
+            continue;
+        }
+
         acc += test_patterns(&seen, div, start_str, end_str, range);
     }
 
-    result.* = acc;
+    return acc;
 }
 
 const expectEqual = std.testing.expectEqual;
@@ -244,73 +223,134 @@ test "lowest" {
 test "divisors" {
     var divs: [20]usize = undefined;
 
-    var n = divisors(9, &divs);
+    var n = divisors(9, &divs, false);
     try std.testing.expectEqualSlices(usize, &[_]usize{1, 3}, divs[0..n]);
 
-    n = divisors(90, &divs);
+    n = divisors(90, &divs, false);
     try std.testing.expectEqualSlices(usize, &[_]usize{1, 2, 3, 5, 6, 9, 10, 15, 18, 30, 45 }, divs[0..n]);
 
-    n = divisors(2, &divs);
+    n = divisors(2, &divs, false);
     try std.testing.expectEqualSlices(usize, &[_]usize{1}, divs[0..n]);
 }
 
-test "part two examples" {
-    var range = Range { 11, 22 };
-    var result: usize = 0;
-
+test "partOne" {
     var test_arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     const allocator = test_arena.allocator();
     defer _ = test_arena.reset(.free_all);
 
-    do_part2_range(allocator, range, &result);
+    var range = Range { 11, 22 };
+    var result = do_range(allocator, range, true);
     try expectEqual(33, result);
 
     range = Range { 95, 99 };
-    do_part2_range(allocator, range, &result);
+    result = do_range(allocator, range, true);
     try expectEqual(99, result);
 
     range = Range { 100, 115 };
-    do_part2_range(allocator, range, &result);
-    try expectEqual(111, result);
+    result = do_range(allocator, range, true);
+    try expectEqual(0, result);
 
     range = Range { 998, 999 };
-    do_part2_range(allocator, range, &result);
-    try expectEqual(999, result);
+    result = do_range(allocator, range, true);
+    try expectEqual(0, result);
 
     range = Range { 1000, 1012 };
-    do_part2_range(allocator, range, &result);
+    result = do_range(allocator, range, true);
     try expectEqual(1010, result);
 
     range = Range { 1188511880, 1188511890 };
-    do_part2_range(allocator, range, &result);
+    result = do_range(allocator, range, true);
     try expectEqual(1188511885, result);
 
     range = Range { 222220, 222224 };
-    do_part2_range(allocator, range, &result);
+    result = do_range(allocator, range, true);
     try expectEqual(222222, result);
 
     range = Range { 1698522, 1698528 };
-    do_part2_range(allocator, range, &result);
+    result = do_range(allocator, range, true);
     try expectEqual(0, result);
 
     range = Range { 446443, 446449 };
-    do_part2_range(allocator, range, &result);
+    result = do_range(allocator, range, true);
     try expectEqual(446446, result);
 
     range = Range { 38593856, 38593862 };
-    do_part2_range(allocator, range, &result);
+    result = do_range(allocator, range, true);
     try expectEqual(38593859, result);
 
     range = Range { 565653, 565659 };
-    do_part2_range(allocator, range, &result);
+    result = do_range(allocator, range, true);
+    try expectEqual(0, result);
+
+    range = Range { 824824821, 824824827 };
+    result = do_range(allocator, range, true);
+    try expectEqual(0, result);
+
+    range = Range { 3081, 5416 };
+    result = do_range(allocator, range, true);
+    try expectEqual(
+        3131 + 3232 + 3333 + 3434 + 3535 + 3636 + 3737 + 
+        3838 + 3939 + 4040 + 4141 + 4242 + 4343 + 4444 +
+        4545 + 4646 + 4747 + 4848 + 4949 + 5050 + 5151 +
+        5252 + 5353,
+    result);
+}
+
+test "part two" {
+    var test_arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    const allocator = test_arena.allocator();
+    defer _ = test_arena.reset(.free_all);
+
+    var range = Range { 11, 22 };
+    var result = do_range(allocator, range, false);
+    try expectEqual(33, result);
+
+    range = Range { 95, 99 };
+    result = do_range(allocator, range, false);
+    try expectEqual(99, result);
+
+    range = Range { 100, 115 };
+    result = do_range(allocator, range, false);
+    try expectEqual(111, result);
+
+    range = Range { 998, 999 };
+    result = do_range(allocator, range, false);
+    try expectEqual(999, result);
+
+    range = Range { 1000, 1012 };
+    result = do_range(allocator, range, false);
+    try expectEqual(1010, result);
+
+    range = Range { 1188511880, 1188511890 };
+    result = do_range(allocator, range, false);
+    try expectEqual(1188511885, result);
+
+    range = Range { 222220, 222224 };
+    result = do_range(allocator, range, false);
+    try expectEqual(222222, result);
+
+    range = Range { 1698522, 1698528 };
+    result = do_range(allocator, range, false);
+    try expectEqual(0, result);
+
+    range = Range { 446443, 446449 };
+    result = do_range(allocator, range, false);
+    try expectEqual(446446, result);
+
+    range = Range { 38593856, 38593862 };
+    result = do_range(allocator, range, false);
+    try expectEqual(38593859, result);
+
+    range = Range { 565653, 565659 };
+    result = do_range(allocator, range, false);
     try expectEqual(565656, result);
 
     range = Range { 824824821, 824824827 };
-    do_part2_range(allocator, range, &result);
+    result = do_range(allocator, range, false);
     try expectEqual(824824824, result);
 
     range = Range { 3081, 5416 };
-    do_part2_range(allocator, range, &result);
+    result = do_range(allocator, range, false);
     try expectEqual(
         3131 + 3232 + 3333 + 3434 + 3535 + 3636 + 3737 + 
         3838 + 3939 + 4040 + 4141 + 4242 + 4343 + 4444 +
