@@ -37,11 +37,13 @@ pub fn solve(allocator: Allocator, bench: *Benchmark, example: bool) !void {
 
     std.debug.print("DAY 01\n", .{});
     t1.start();
-    std.debug.print("\tPart 1 - {d}\n", .{part01(moves)});
+    const p1 = part01(moves);
     t1.finish();
     t2.start();
-    std.debug.print("\tPart 2 - {d}\n", .{part02(moves)});
+    const p2 = part02(moves);
     t2.finish();
+    std.debug.print("\tPart 1 - {d}\n", .{p1});
+    std.debug.print("\tPart 2 - {d}\n", .{p2});
 }
 
 fn part01(moves: std.ArrayList(i16)) i16 {
