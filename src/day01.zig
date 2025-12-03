@@ -1,6 +1,7 @@
 const std = @import("std");
 const Input = @import("common").Input;
 const Allocator = std.mem.Allocator; 
+const Benchmark = @import("common").Benchmark;
 
 fn parse_line(line: []const u8) !i16 {
     const mul: i16 = if (line[0] == 'L') -1 else 1;
@@ -26,14 +27,21 @@ fn acc_moves(allocator: Allocator, input: *Input) !std.ArrayList(i16) {
     return moves;
 }
 
-pub fn solve(allocator: Allocator, example: bool) !void {
+pub fn solve(allocator: Allocator, bench: *Benchmark, example: bool) !void {
     var input: Input = try .init(allocator, "day01.txt", example);
     const moves = try acc_moves(allocator, &input);
     input.deinit();
 
+    var t1 = bench.add("Day 01 - Part 1");
+    var t2 = bench.add("Day 01 - Part 2");
+
     std.debug.print("DAY 01\n", .{});
+    t1.start();
     std.debug.print("\tPart 1 - {d}\n", .{part01(moves)});
+    t1.finish();
+    t2.start();
     std.debug.print("\tPart 2 - {d}\n", .{part02(moves)});
+    t2.finish();
 }
 
 fn part01(moves: std.ArrayList(i16)) i16 {

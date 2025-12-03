@@ -1,15 +1,23 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 const Input = @import("common").Input;
+const Benchmark = @import("common").Benchmark;
 
-pub fn solve(allocator: Allocator, example: bool) !void {
+pub fn solve(allocator: Allocator, bench: *Benchmark, example: bool) !void {
     var input: Input = try .init(allocator, "day03.txt", example);
     defer input.deinit();
 
+    var t1 = bench.add("Day 03 - Part 1");
+    var t2 = bench.add("Day 03 - Part 2");
+
     const lines = try parse(allocator, &input);
-    std.debug.print("DAY 02\n", .{});
+    std.debug.print("DAY 03\n", .{});
+    t1.start();
     std.debug.print("\tPart 1: {d}\n", .{part01(lines)});
+    t1.finish();
+    t2.start();
     std.debug.print("\tPart 2: {d}\n", .{part02(lines)});
+    t2.finish();
 }
 
 fn parse(allocator: Allocator, input: *Input) !std.ArrayList([]u8) {

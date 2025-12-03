@@ -1,19 +1,27 @@
 const std = @import("std");
 const Input = @import("common").Input;
 const Allocator = std.mem.Allocator;
+const Benchmark = @import("common").Benchmark;
 
-pub fn solve(allocator: Allocator, example: bool) !void {
+pub fn solve(allocator: Allocator, bench: *Benchmark, example: bool) !void {
     var input: Input = try .init(allocator, "day02.txt", example);
     const ranges = try parse(allocator, &input);
     defer input.deinit();
+
+    var t1 = bench.add("Day 02 - Part 1");
+    var t2 = bench.add("Day 02 - Part 2");
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     const arena_alloc = arena.allocator();
 
     std.debug.print("DAY 02\n", .{});
+    t1.start();
     std.debug.print("\tPart 1: {d}\n", .{try part01(arena_alloc, ranges)});
+    t1.finish();
     _ = arena.reset(.free_all);
+    t2.start();
     std.debug.print("\tPart 2: {d}\n", .{try part02(arena_alloc, ranges)});
+    t2.finish();
 }
 
 const Range = struct {

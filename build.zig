@@ -23,13 +23,14 @@ pub fn build(b: *std.Build) void {
 
     const days = 3;
 
-    var imports: [days]std.Build.Module.Import = undefined;
+    var imports: [days+1]std.Build.Module.Import = undefined;
+    imports[0] = .{ .name = "common", .module = mod_common };
     const test_step = b.step("test", "Run tests");
 
     for (1..days+1) |day| {
         const dayname = b.fmt("day{d:0>2}", .{day});
         const module = dayModule(b, target, mod_common, day);
-        imports[day-1] = .{ .name = dayname, .module = module };
+        imports[day] = .{ .name = dayname, .module = module };
 
         const day_tests = b.addTest(.{
             .root_module = module,
