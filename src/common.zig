@@ -90,8 +90,9 @@ pub const Benchmark = struct {
 
     pub fn report(self: *Benchmark) void {
         std.debug.print("Summary ------------------------------------\n", .{});
-        for (self.timers) |timer| {
-            std.debug.print("{s} - Took {d}μs\n", .{timer.name, timer.ended_at/1000});
+        for (0..self.n) |i| {
+            const timer = self.timers[i];
+            std.debug.print("{s} Took {d}μs\n", .{timer.name, timer.ended_at/1000});
         }
         std.debug.print("--------------------------------------------\n", .{});
     }
