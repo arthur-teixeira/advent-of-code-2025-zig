@@ -119,19 +119,9 @@ fn do_part1_range(range: Range, result: *usize) void {
 fn part02(allocator: Allocator, ranges: std.ArrayList(Range)) !usize {
     var results = try allocator.alloc(usize, ranges.items.len);
 
-    // var tp: std.Thread.Pool = undefined;
-    // try std.Thread.Pool.init(&tp, .{
-    //     .allocator = allocator,
-    //     .n_jobs = std.Thread.getCpuCount() catch unreachable,
-    // });
-
-    // var wg = std.Thread.WaitGroup{};
     for (ranges.items, 0..) |range, i| {
-        // TODO: Benchmark implementation with/without threads, probably paralelization overhead is too large
         do_part2_range(allocator, range, &results[i]);
-        // tp.spawnWg(&wg, do_part2_range, .{range, &results[i]});
     }
-    // wg.wait();
 
     var acc: usize = 0;
     for (results) |i| acc += i;
@@ -207,6 +197,7 @@ fn do_part2_range(allocator: Allocator, range: Range, result: *usize) void {
     const divs = div_buffer[0..n_divs];
 
     var seen = std.AutoArrayHashMap(usize, bool).init(allocator);
+    defer seen.deinit();
 
     for (divs) |div| {
         acc += test_patterns(&seen, div, start_str, end_str, range);
@@ -319,4 +310,18 @@ test "part two examples" {
         4545 + 4646 + 4747 + 4848 + 4949 + 5050 + 5151 +
         5252 + 5353,
     result);
+}
+
+test "final" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    const allocator = arena.allocator();
+    defer _ = arena.reset(.free_all);
+
+    var input: Input = try .init(allocator, "day02.txt", false);
+    defer input.deinit();
+
+    const ranges = try parse(allocator, &input);
+
+    try expectEqual(28146997880, part01(allocator, ranges));
+    try expectEqual(40028128307, part02(allocator, ranges));
 }

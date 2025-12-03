@@ -128,3 +128,16 @@ test "example test" {
     try expectEqual(round[0], 50);
     try expectEqual(round[1], 10);
 }
+
+test "final" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer _ = arena.reset(.free_all);
+    const allocator = arena.allocator();
+    var input: Input = try .init(allocator, "day01.txt", false);
+    defer input.deinit();
+
+    const moves = try acc_moves(allocator, &input);
+
+    try std.testing.expectEqual(1141, part01(moves));
+    try std.testing.expectEqual(6634, part02(moves));
+}
