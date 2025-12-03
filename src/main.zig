@@ -2,7 +2,7 @@ const std = @import("std");
 const day01 = @import("day01");
 const day02 = @import("day02");
 
-var mem_pool: [34*1024]u8 = undefined;
+var mem_pool: [22*1024]u8 = undefined;
 
 pub fn main() !void {
     var fba = std.heap.FixedBufferAllocator.init(&mem_pool);
