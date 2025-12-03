@@ -22,12 +22,9 @@ const Range = struct {
     usize,
 };
 
-fn in_range(self: Range, pattern: []const u8) bool {
+fn in_range(self: Range, pattern: usize) bool {
     const start, const end = self;
-
-    const num = parse_int_unchecked(pattern);
-
-    return start <= num and num <= end;
+    return start <= pattern and pattern <= end;
 }
 
 fn parse(allocator: Allocator, input: *Input) !std.ArrayList(Range) {
@@ -155,30 +152,44 @@ fn divisors(n: usize, divs: []usize) usize {
     return j;
 }
 
-fn repeat(dest: []u8, src: []const u8, n: usize) usize {
-    if (dest.len < src.len * n) {
-        std.debug.panic("Pattern buffer should be at least {d} bytes long.\n", .{src.len * n});
+fn repeat(dest: []u8, src: usize, n: usize) usize {
+    var src_buf: [10]u8 = undefined;
+    const src_str = std.fmt.bufPrint(&src_buf, "{d}", .{src}) catch @panic("Buffer too small");
+
+    if (dest.len < src_str.len * n) {
+        std.debug.panic("Pattern buffer should be at least {d} bytes long.\n", .{src_str.len * n});
     }
 
     var i: usize = 0;
     for (0..n) |_| {
-        @memcpy(dest[i..i+src.len], src);
-        i += src.len;
+        @memcpy(dest[i..i+src_str.len], src_str);
+        i += src_str.len;
     }
 
-    std.debug.assert(i == src.len * n);
+    std.debug.assert(i == src_str.len * n);
     return i;
 }
 
-fn test_patterns(seen: *std.StringArrayHashMap(bool), div: usize, start_str: []const u8, range: Range) usize {
-    const pattern = start_str[0..div];
-    var pattern_buf: [10]u8 = undefined;
-    const pattern_end = repeat(&pattern_buf, pattern, start_str.len / div);
-    if (in_range(range, pattern_buf[0..pattern_end]) and !seen.contains(pattern_buf[0..pattern_end])) {
-        seen.put(pattern_buf[0..pattern_end], true) catch @panic("OOM");
-        return parse_int_unchecked(pattern_buf[0..pattern_end]);
+// TODO: Replace AutoArrayHashMap with a bitmap that has MAX(ranges.right) bits to reduce memory usage
+fn test_patterns(seen: *std.AutoArrayHashMap(usize, bool), div: usize, start_str: []const u8, end_str: []const u8, range: Range) usize {
+    const pattern_start_str = start_str[0..div];
+    const pattern_end_str = end_str[0..div];
+
+    const pattern_start = parse_int_unchecked(pattern_start_str);
+    const pattern_end = parse_int_unchecked(pattern_end_str);
+
+    var acc: usize = 0;
+    for (pattern_start..pattern_end + 1) |pattern| {
+        var pattern_buf: [10]u8 = undefined;
+        const n = repeat(&pattern_buf, pattern, start_str.len / div);
+        const repeated = parse_int_unchecked(pattern_buf[0..n]);
+
+        if (in_range(range, repeated) and !seen.contains(repeated)) {
+            seen.put(repeated, true) catch @panic("OOM");
+            acc += repeated;
+        }
     }
-    return 0;
+    return acc;
 }
 
 fn do_part2_range(allocator: Allocator, range: Range, result: *usize) void {
@@ -195,11 +206,10 @@ fn do_part2_range(allocator: Allocator, range: Range, result: *usize) void {
     const n_divs = divisors(start_str.len, &div_buffer);
     const divs = div_buffer[0..n_divs];
 
-    var seen = std.StringArrayHashMap(bool).init(allocator);
+    var seen = std.AutoArrayHashMap(usize, bool).init(allocator);
 
     for (divs) |div| {
-        acc += test_patterns(&seen, div, start_str, range);
-        acc += test_patterns(&seen, div, end_str, range);
+        acc += test_patterns(&seen, div, start_str, end_str, range);
     }
 
     result.* = acc;
@@ -301,7 +311,12 @@ test "part two examples" {
     do_part2_range(allocator, range, &result);
     try expectEqual(824824824, result);
 
-    range = Range { 2121212118, 2121212124 };
+    range = Range { 3081, 5416 };
     do_part2_range(allocator, range, &result);
-    try expectEqual(2121212121, result);
+    try expectEqual(
+        3131 + 3232 + 3333 + 3434 + 3535 + 3636 + 3737 + 
+        3838 + 3939 + 4040 + 4141 + 4242 + 4343 + 4444 +
+        4545 + 4646 + 4747 + 4848 + 4949 + 5050 + 5151 +
+        5252 + 5353,
+    result);
 }
