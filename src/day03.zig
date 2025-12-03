@@ -9,6 +9,7 @@ pub fn solve(allocator: Allocator, example: bool) !void {
     const lines = try parse(allocator, &input);
     std.debug.print("DAY 02\n", .{});
     std.debug.print("\tPart 1: {d}\n", .{part01(lines)});
+    std.debug.print("\tPart 2: {d}\n", .{part02(lines)});
 }
 
 fn parse(allocator: Allocator, input: *Input) !std.ArrayList([]u8) {
@@ -30,48 +31,73 @@ fn chars_to_vals(allocator: Allocator, chars: []const u8) ![]u8 {
     return vals;
 }
 
-fn solve_line(line: []u8) usize {
-    var a: u8 = 0;
-    var a_pos: usize = 0;
-    for (line[0..line.len - 1], 0..) |v, i| {
-        if (v > a) {
-            a = v;
-            a_pos = i;
+fn solve_line(line: []u8, num_digits: usize) usize {
+    std.debug.assert(line.len >= num_digits);
+
+    var acc: usize = 0;
+    var last_digit_pos: usize = 0;
+    for (0..num_digits) |current_digit| {
+        const start = if (current_digit == 0) 0 else last_digit_pos + 1;
+        var max: usize = 0;
+        var max_pos: usize = 0;
+
+        const cur = line[start..(line.len - (num_digits-current_digit - 1))];
+        for (cur, start..) |digit, digit_pos| {
+            if (digit > max) {
+                max = digit;
+                max_pos = digit_pos;
+                if (digit == 9) break;
+            }
         }
+
+        last_digit_pos = max_pos; 
+        acc = (acc * 10) + max;
     }
 
-    var b: u8 = 0;
-    for (line[a_pos+1..]) |v| {
-        if (v > b) {
-            b = v;
-        }
-    }
-
-    return 10 * a + b;
+    return acc;
 }
 
 fn part01(lines: std.ArrayList([]u8)) usize {
     var acc: usize = 0;
     for (lines.items) |line| {
-        acc += solve_line(line);
+        acc += solve_line(line, 2);
+    }
+
+    return acc;
+}
+
+fn part02(lines: std.ArrayList([]u8)) usize {
+    var acc: usize = 0;
+    for (lines.items) |line| {
+        acc += solve_line(line, 12);
     }
 
     return acc;
 }
 
 const expectEqual = std.testing.expectEqual;
-test "day 03" {
+test "day 03 part 1" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer _ = arena.reset(.free_all);
     const allocator = arena.allocator();
 
-    try expectEqual(96, solve_line(try chars_to_vals(allocator, "1231591231241513456234")));
-    try expectEqual(13, solve_line(try chars_to_vals(allocator, "11111111111113")));
-    try expectEqual(31, solve_line(try chars_to_vals(allocator, "111111111111131")));
-    try expectEqual(31, solve_line(try chars_to_vals(allocator, "1111111111111231")));
-    try expectEqual(23, solve_line(try chars_to_vals(allocator, "211111111111113")));
-    try expectEqual(99, solve_line(try chars_to_vals(allocator, "911111111111119")));
+    try expectEqual(96, solve_line(try chars_to_vals(allocator, "1231591231241513456234"), 2));
+    try expectEqual(13, solve_line(try chars_to_vals(allocator, "111111111111113"), 2));
+    try expectEqual(31, solve_line(try chars_to_vals(allocator, "111111111111131"), 2));
+    try expectEqual(31, solve_line(try chars_to_vals(allocator, "111111111111231"), 2));
+    try expectEqual(23, solve_line(try chars_to_vals(allocator, "211111111111113"), 2));
+    try expectEqual(99, solve_line(try chars_to_vals(allocator, "911111111111119"), 2));
+}
 
+test "day 03 part 2" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer _ = arena.reset(.free_all);
+    const allocator = arena.allocator();
+
+    try expectEqual(987654321111, solve_line(try chars_to_vals(allocator, "987654321111111"), 12));
+    try expectEqual(811111111119, solve_line(try chars_to_vals(allocator, "811111111111119"), 12));
+    try expectEqual(434234234278, solve_line(try chars_to_vals(allocator, "234234234234278"), 12));
+    try expectEqual(888911112111, solve_line(try chars_to_vals(allocator, "818181911112111"), 12));
 }
 
 test "final answer" {
