@@ -8,6 +8,7 @@ pub const Input = struct {
     allocator: Allocator,
     f: std.fs.File,
     reader: std.fs.File.Reader,
+    buf: []u8,
 
     fn path(allocator: Allocator, day: []const u8, example: bool) ![]const u8 {
         const dir = if (example) ex else in;
@@ -17,6 +18,7 @@ pub const Input = struct {
     pub fn init(allocator: Allocator, day: []const u8, example: bool) !Input {
         const cwd = std.fs.cwd();
         const p = try path(allocator, day, example);
+        defer allocator.free(p);
         const f = try cwd.openFile(p, .{ .mode = .read_only });
         const buf = try allocator.alloc(u8, 512);
         const rdr = f.reader(buf);
@@ -24,11 +26,13 @@ pub const Input = struct {
         return Input{
             .allocator = allocator,
             .reader = rdr,
+            .buf = buf,
             .f = f,
         };
     }
 
     pub fn deinit(self: *Input) void {
         self.f.close();
+        self.allocator.free(self.buf);
     }
 };

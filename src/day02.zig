@@ -4,9 +4,8 @@ const Allocator = std.mem.Allocator;
 
 pub fn solve(allocator: Allocator, example: bool) !void {
     var input: Input = try .init(allocator, "day02.txt", example);
-    defer input.deinit();
-
     const ranges = try parse(allocator, &input);
+    defer input.deinit();
 
     var arena = std.heap.ArenaAllocator.init(allocator);
     const arena_alloc = arena.allocator();

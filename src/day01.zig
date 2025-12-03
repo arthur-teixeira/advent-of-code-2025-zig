@@ -28,9 +28,8 @@ fn acc_moves(allocator: Allocator, input: *Input) !std.ArrayList(i16) {
 
 pub fn solve(allocator: Allocator, example: bool) !void {
     var input: Input = try .init(allocator, "day01.txt", example);
-    defer input.deinit();
-
     const moves = try acc_moves(allocator, &input);
+    input.deinit();
 
     std.debug.print("DAY 01\n", .{});
     std.debug.print("\tPart 1 - {d}\n", .{part01(moves)});

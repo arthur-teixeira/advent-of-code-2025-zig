@@ -1,8 +1,9 @@
 const std = @import("std");
 const day01 = @import("day01");
 const day02 = @import("day02");
+const day03 = @import("day03");
 
-var mem_pool: [22*1024]u8 = undefined;
+var mem_pool: [24*1024]u8 = undefined;
 
 pub fn main() !void {
     var fba = std.heap.FixedBufferAllocator.init(&mem_pool);
@@ -16,4 +17,6 @@ pub fn main() !void {
     try day01.solve(fba_allocator, run_example);
     fba.reset();
     try day02.solve(fba_allocator, run_example);
+    fba.reset();
+    try day03.solve(fba_allocator, run_example);
 }

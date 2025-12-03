@@ -21,7 +21,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
     });
 
-    const days = 2;
+    const days = 3;
 
     var imports: [days]std.Build.Module.Import = undefined;
     const test_step = b.step("test", "Run tests");
