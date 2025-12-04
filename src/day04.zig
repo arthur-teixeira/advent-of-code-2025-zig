@@ -83,13 +83,23 @@ const Grid = struct {
 
         return if (acc < 4) 1 else 0;
     }
+
+    fn unset_multiple(self: *Grid, to_unset: std.bit_set.ArrayBitSet(usize, 139 * 139)) void {
+        self.elems.setIntersection(to_unset);
+    }
+
+    fn accessible_removing(self: *Grid, w: usize, h: usize) usize {
+        const result = self.accessible(w, h);
+        self.elems.unset(self.i(w, h));
+        return result;
+    }
 };
 
 pub fn solve(allocator: Allocator, bench: *Benchmark, example: bool) !void {
     var input: Input = try .init(allocator, "day04.txt", example);
     defer input.deinit();
 
-    const grid = Grid.parse(&input) catch unreachable;
+    var grid = Grid.parse(&input) catch unreachable;
 
     var t1 = bench.add("Day 04 - Part 1");
     var t2 = bench.add("Day 04 - Part 2");
@@ -99,10 +109,10 @@ pub fn solve(allocator: Allocator, bench: *Benchmark, example: bool) !void {
     const p1 = part01(grid);
     t1.finish();
     t2.start();
-    // const p2 = part02(moves);
+    const p2 = part02(&grid);
     t2.finish();
     std.debug.print("\tPart 1 - {d}\n", .{p1});
-    std.debug.print("\tPart 2 - {d}\n", .{2});
+    std.debug.print("\tPart 2 - {d}\n", .{p2});
 }
 
 fn part01(grid: Grid) usize {
@@ -111,6 +121,32 @@ fn part01(grid: Grid) usize {
         for (0..grid.h) |h| {
             acc += grid.accessible(w, h);
         }
+    }
+
+    return acc;
+}
+
+fn part02(grid: *Grid) usize {
+    var acc: usize = 0;
+    var remove_set: std.bit_set.ArrayBitSet(usize, 139 * 139) = .initFull();
+
+    while(true) {
+        var should_remove = false;
+        for (0..grid.w) |w| {
+            for (0..grid.h) |h| {
+                const accessible = grid.accessible(w, h);
+                const remove = (accessible == 1);
+                acc += accessible;
+                if (remove) {
+                    should_remove = true;
+                    remove_set.unset(grid.i(w, h));
+                }
+            }
+        }
+
+        grid.unset_multiple(remove_set);
+        remove_set.setRangeValue(.{ .start = 0, .end = 139 * 139 }, true);
+        if (!should_remove) break;
     }
 
     return acc;
