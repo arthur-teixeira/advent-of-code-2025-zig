@@ -60,19 +60,12 @@ fn parse_int_unchecked(s: []const u8) usize {
     return std.fmt.parseInt(usize, s, 10) catch unreachable;
 }
 
-fn highest(len: usize) usize {
-    std.debug.assert(len <= 10);
-    var buf: [10]u8 = undefined;
-    @memset(buf[0..len], '9');
-    return parse_int_unchecked(buf[0..len]);
+inline fn highest(len: usize) usize {
+    return std.math.pow(usize, 10, len) - 1;
 }
 
-fn lowest(len: usize) usize {
-    std.debug.assert(len <= 10);
-    var buf: [10]u8 = undefined;
-    buf[0] = '1';
-    @memset(buf[1..len], '0');
-    return parse_int_unchecked(buf[0..len]);
+inline fn lowest(len: usize) usize {
+    return std.math.pow(usize, 10, len - 1);
 }
 
 fn split_ranges(right: []const u8, left: []const u8, ranges: *std.ArrayList(Range)) void {
@@ -117,6 +110,7 @@ fn divisors(n: usize, divs: []usize, only_pair: bool) usize {
 
     for (1..nn) |i| {
         if (n % i == 0) {
+            @branchHint(.likely);
             divs[j] = i;
             j += 1;
             std.debug.assert(j <= divs.len);
@@ -125,36 +119,34 @@ fn divisors(n: usize, divs: []usize, only_pair: bool) usize {
     return j;
 }
 
-fn repeat(dest: []u8, src: usize, n: usize) usize {
-    var src_buf: [10]u8 = undefined;
-    const src_str = std.fmt.bufPrint(&src_buf, "{d}", .{src}) catch @panic("Buffer too small");
-
-    if (dest.len < src_str.len * n) {
-        std.debug.panic("Pattern buffer should be at least {d} bytes long.\n", .{src_str.len * n});
-    }
-
+fn repeat(src: usize, n: usize) usize {
     var i: usize = 0;
+    const nd = num_digits(src);
     for (0..n) |_| {
-        @memcpy(dest[i..i+src_str.len], src_str);
-        i += src_str.len;
+        i = i * std.math.pow(usize, 10, nd) + src;
     }
 
-    std.debug.assert(i == src_str.len * n);
     return i;
 }
 
-fn test_patterns(seen: *std.AutoArrayHashMap(usize, bool), div: usize, start_str: []const u8, end_str: []const u8, range: Range) usize {
-    const pattern_start_str = start_str[0..div];
-    const pattern_end_str = end_str[0..div];
+inline fn num_digits(n: usize) usize {
+    return std.math.log10_int(n) + 1;
+}
 
-    const pattern_start = parse_int_unchecked(pattern_start_str);
-    const pattern_end = parse_int_unchecked(pattern_end_str);
+inline fn get_n_digits(elem: usize, n: usize) usize {
+    const nd = num_digits(elem);
+    return elem / std.math.pow(usize, 10, (nd - n));
+}
+
+fn test_patterns(seen: *std.AutoArrayHashMap(usize, bool), div: usize, range: Range) usize {
+    const start, const end = range;
+    const nd = num_digits(start);
+    const pattern_start = get_n_digits(start, div);
+    const pattern_end = get_n_digits(end, div);
 
     var acc: usize = 0;
     for (pattern_start..pattern_end + 1) |pattern| {
-        var pattern_buf: [10]u8 = undefined;
-        const n = repeat(&pattern_buf, pattern, start_str.len / div);
-        const repeated = parse_int_unchecked(pattern_buf[0..n]);
+        const repeated = repeat(pattern, nd / div);
 
         if (in_range(range, repeated) and !seen.contains(repeated)) {
             seen.put(repeated, true) catch @panic("OOM");
@@ -166,33 +158,41 @@ fn test_patterns(seen: *std.AutoArrayHashMap(usize, bool), div: usize, start_str
 
 fn do_range(allocator: Allocator, range: Range, only_pair: bool) usize {
     var acc: usize = 0;
-    const start, const end = range;
-
-    var start_buf: [10]u8 = undefined;
-    const start_str = std.fmt.bufPrint(&start_buf, "{d}", .{start}) catch @panic("Buffer too small");
-
-    var end_buf: [10]u8 = undefined;
-    const end_str = std.fmt.bufPrint(&end_buf, "{d}", .{end}) catch @panic("Buffer too small");
+    const start, _ = range;
 
     var div_buffer: [10]usize = undefined;
-    const n_divs = divisors(start_str.len, &div_buffer, only_pair);
+    const nd = num_digits(start);
+    const n_divs = divisors(nd, &div_buffer, only_pair);
     const divs = div_buffer[0..n_divs];
 
     var seen = std.AutoArrayHashMap(usize, bool).init(allocator);
     defer seen.deinit();
 
     for (divs) |div| {
-        if (only_pair and start_str.len % div > 0) {
+        if (only_pair and nd % div > 0) {
             continue;
         }
 
-        acc += test_patterns(&seen, div, start_str, end_str, range);
+        acc += test_patterns(&seen, div, range);
     }
 
     return acc;
 }
 
 const expectEqual = std.testing.expectEqual;
+
+test "num digits" {
+    try expectEqual(6, num_digits(123123));
+    try expectEqual(2, num_digits(99));
+    try expectEqual(1, num_digits(9));
+    try expectEqual(10, num_digits(1234567890));
+}
+
+test "get n digits" {
+    try expectEqual(123, get_n_digits(123123, 3));
+    try expectEqual(5423452682, get_n_digits(5423452682, 10));
+    try expectEqual(5423, get_n_digits(5423452682, 4));
+}
 
 test "split range into two" {
     const left = "90";
