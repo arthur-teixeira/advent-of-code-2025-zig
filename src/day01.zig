@@ -15,7 +15,7 @@ fn move(acc: i16, val: i16) i16 {
 }
 
 fn acc_moves(allocator: Allocator, input: *Input) !std.ArrayList(i16) {
-    var moves = try std.ArrayList(i16).initCapacity(allocator, 4532); // pre allocate known number of lines for main input 
+    var moves = try std.ArrayList(i16).initCapacity(allocator, 4532);
     while (input.reader.interface.takeDelimiter('\n')) |line| {
         if (line == null) {
             break;
