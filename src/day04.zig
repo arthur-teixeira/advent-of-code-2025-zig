@@ -31,11 +31,11 @@ const Grid = struct {
     w: usize,
     elems: std.bit_set.ArrayBitSet(usize, 139 * 139),
 
-    fn i(self: Grid, w: usize, h: usize) usize {
+    inline fn i(self: Grid, w: usize, h: usize) usize {
         return w * self.w + h;
     }
 
-    fn at(self: Grid, w: usize, h: usize) bool {
+    inline fn at(self: Grid, w: usize, h: usize) bool {
         return self.elems.isSet(self.i(w, h));
     }
 
@@ -60,12 +60,13 @@ const Grid = struct {
         return self;
     }
 
-    fn in_bounds(self: Grid, w: usize, h: usize) bool {
+    inline fn in_bounds(self: Grid, w: usize, h: usize) bool {
         return w < self.w and h < self.h;
     }
 
     fn accessible(self: Grid, w: usize, h: usize) usize {
         if (!self.elems.isSet(self.i(w, h))) {
+            @branchHint(.likely);
             return 0;
         }
 
@@ -77,21 +78,12 @@ const Grid = struct {
             const ch: usize = @bitCast(@as(isize, @bitCast(h)) + dh);
 
             if (self.in_bounds(cw, ch) and self.elems.isSet(self.i(cw, ch))) {
+                @branchHint(.likely);
                 acc += 1;
             }
         }
 
         return if (acc < 4) 1 else 0;
-    }
-
-    fn unset_multiple(self: *Grid, to_unset: std.bit_set.ArrayBitSet(usize, 139 * 139)) void {
-        self.elems.setIntersection(to_unset);
-    }
-
-    fn accessible_removing(self: *Grid, w: usize, h: usize) usize {
-        const result = self.accessible(w, h);
-        self.elems.unset(self.i(w, h));
-        return result;
     }
 };
 
@@ -144,7 +136,7 @@ fn part02(grid: *Grid) usize {
             }
         }
 
-        grid.unset_multiple(remove_set);
+        grid.elems.setIntersection(remove_set);
         remove_set.setRangeValue(.{ .start = 0, .end = 139 * 139 }, true);
         if (!should_remove) break;
     }
