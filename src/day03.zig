@@ -13,11 +13,14 @@ pub fn solve(allocator: Allocator, bench: *Benchmark, example: bool) !void {
     const lines = try parse(allocator, &input);
     std.debug.print("DAY 03\n", .{});
     t1.start();
-    std.debug.print("\tPart 1: {d}\n", .{part01(lines)});
+    const p1 = part01(lines);
     t1.finish();
     t2.start();
-    std.debug.print("\tPart 2: {d}\n", .{part02(lines)});
+    const p2 = part02(lines);
     t2.finish();
+
+    std.debug.print("\tPart 1: {d}\n", .{p1});
+    std.debug.print("\tPart 2: {d}\n", .{p2});
 }
 
 fn parse(allocator: Allocator, input: *Input) !std.ArrayList([]u8) {
