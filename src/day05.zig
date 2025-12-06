@@ -80,11 +80,10 @@ fn cmp(context: *[1000]usize, a: usize, b: usize) bool {
 
 fn part01(inventory: *Inventory) usize {
     var valid: usize = 0;
-    var seen: std.bit_set.ArrayBitSet(usize, inventory.ingredients.len) = .initEmpty();
     for (inventory.ranges) |range| {
         for (inventory.ingredients, 0..) |ing, i| {
-            if (range.start <= ing and ing <= range.end and !seen.isSet(i)) {
-                seen.set(i);
+            if (range.start <= ing and ing <= range.end) {
+                inventory.ingredients[i] = 0;
                 valid += 1;
             }
         }
