@@ -103,8 +103,8 @@ pub fn solve(allocator: Allocator, bench: *Benchmark, example: bool) !void {
     t2.start();
     const p2 = part02(&grid);
     t2.finish();
-    std.debug.print("\tPart 1 - {d}\n", .{p1});
-    std.debug.print("\tPart 2 - {d}\n", .{p2});
+    std.debug.print("\tPart 1: {d}\n", .{p1});
+    std.debug.print("\tPart 2: {d}\n", .{p2});
 }
 
 fn part01(grid: Grid) usize {

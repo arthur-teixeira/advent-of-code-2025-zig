@@ -42,8 +42,8 @@ pub fn solve(allocator: Allocator, bench: *Benchmark, example: bool) !void {
     t2.start();
     const p2 = part02(moves);
     t2.finish();
-    std.debug.print("\tPart 1 - {d}\n", .{p1});
-    std.debug.print("\tPart 2 - {d}\n", .{p2});
+    std.debug.print("\tPart 1: {d}\n", .{p1});
+    std.debug.print("\tPart 2: {d}\n", .{p2});
 }
 
 fn part01(moves: std.ArrayList(i16)) i16 {

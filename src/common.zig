@@ -20,7 +20,7 @@ pub const Input = struct {
         const p = try path(allocator, day, example);
         defer allocator.free(p);
         const f = try cwd.openFile(p, .{ .mode = .read_only });
-        const buf = try allocator.alloc(u8, 512);
+        const buf = try allocator.alloc(u8, 5731);
         const rdr = f.reader(buf);
 
         return Input{

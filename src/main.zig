@@ -4,9 +4,11 @@ const day02 = @import("day02");
 const day03 = @import("day03");
 const day04 = @import("day04");
 const day05 = @import("day05");
+const day06 = @import("day06");
 const Benchmark = @import("common").Benchmark;
 
-var mem_pool: [24*1024]u8 = undefined;
+// TODO: pass comptime buf length to input to reduce memory usage for most days
+var mem_pool: [40*1024]u8 = undefined;
 
 pub fn main() !void {
     var fba = std.heap.FixedBufferAllocator.init(&mem_pool);
@@ -34,6 +36,8 @@ pub fn main() !void {
     try day04.solve(fba_allocator, &bench, run_example);
     fba.reset();
     try day05.solve(fba_allocator, &bench, run_example);
+    fba.reset();
+    try day06.solve(fba_allocator, &bench, run_example);
 
     overall.finish();
     bench.report();

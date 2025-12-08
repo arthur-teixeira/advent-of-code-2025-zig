@@ -21,7 +21,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
     });
 
-    const days = 5;
+    const days = 6;
 
     var imports: [days+1]std.Build.Module.Import = undefined;
     imports[0] = .{ .name = "common", .module = mod_common };
