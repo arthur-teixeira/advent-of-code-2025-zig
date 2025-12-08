@@ -109,7 +109,7 @@ const Homework = struct {
             operands[i] = line.next_number() orelse return null;
         }
         const op = self.lines[self.num_lines - 1].next_operator() orelse unreachable;
-        return op.do(operands[0..self.num_lines - 1]);
+        return op.do(operands[0 .. self.num_lines - 1]);
     }
 
     fn reset(self: *Homework) void {
@@ -138,10 +138,9 @@ const Homework = struct {
             operands[ii] = acc;
         }
 
-        return op.do(operands[0..end - start]);
+        return op.do(operands[0 .. end - start]);
     }
 };
-
 
 pub fn solve(allocator: Allocator, bench: *Benchmark, example: bool) !void {
     var input: Input = try .init(allocator, "day06.txt", example);

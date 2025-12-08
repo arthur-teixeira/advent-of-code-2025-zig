@@ -39,7 +39,7 @@ fn in_range(self: Range, pattern: usize) bool {
 
 fn parse(allocator: Allocator, input: *Input) !std.ArrayList(Range) {
     var ranges = try std.ArrayList(Range).initCapacity(allocator, 72);
-    while(try input.reader.interface.takeDelimiter('-')) |left| {
+    while (try input.reader.interface.takeDelimiter('-')) |left| {
         const trimmed_left = std.mem.trimEnd(u8, left, "\n");
         const trimmed_right = std.mem.trimEnd(u8, (try input.reader.interface.takeDelimiter(',')).?, "\n");
 
@@ -72,8 +72,8 @@ fn split_ranges(right: []const u8, left: []const u8, ranges: *std.ArrayList(Rang
     std.debug.assert(left.len > right.len);
     std.debug.assert(left.len - right.len == 1);
 
-    const r1 = Range { parse_int_unchecked(right), highest(right.len) };
-    const r2 =  Range { lowest(left.len), parse_int_unchecked(left) };
+    const r1 = Range{ parse_int_unchecked(right), highest(right.len) };
+    const r2 = Range{ lowest(left.len), parse_int_unchecked(left) };
     ranges.appendAssumeCapacity(r1);
     ranges.appendAssumeCapacity(r2);
 }
@@ -104,7 +104,7 @@ fn divisors(n: usize, divs: []usize, only_pair: bool) usize {
             return 0;
         }
 
-        divs[0] = n/2;
+        divs[0] = n / 2;
         return 1;
     }
 
@@ -202,8 +202,8 @@ test "split range into two" {
     split_ranges(left, right, &ranges);
     try expectEqual(2, ranges.items.len);
 
-    try expectEqual(Range { 90, 99 }, ranges.items[0]);
-    try expectEqual(Range { 100, 110 }, ranges.items[1]);
+    try expectEqual(Range{ 90, 99 }, ranges.items[0]);
+    try expectEqual(Range{ 100, 110 }, ranges.items[1]);
 }
 
 test "highest" {
@@ -224,10 +224,10 @@ test "divisors" {
     var divs: [20]usize = undefined;
 
     var n = divisors(9, &divs, false);
-    try std.testing.expectEqualSlices(usize, &[_]usize{1, 3}, divs[0..n]);
+    try std.testing.expectEqualSlices(usize, &[_]usize{ 1, 3 }, divs[0..n]);
 
     n = divisors(90, &divs, false);
-    try std.testing.expectEqualSlices(usize, &[_]usize{1, 2, 3, 5, 6, 9, 10, 15, 18, 30, 45 }, divs[0..n]);
+    try std.testing.expectEqualSlices(usize, &[_]usize{ 1, 2, 3, 5, 6, 9, 10, 15, 18, 30, 45 }, divs[0..n]);
 
     n = divisors(2, &divs, false);
     try std.testing.expectEqualSlices(usize, &[_]usize{1}, divs[0..n]);
@@ -238,62 +238,60 @@ test "partOne" {
     const allocator = test_arena.allocator();
     defer _ = test_arena.reset(.free_all);
 
-    var range = Range { 11, 22 };
+    var range = Range{ 11, 22 };
     var result = do_range(allocator, range, true);
     try expectEqual(33, result);
 
-    range = Range { 95, 99 };
+    range = Range{ 95, 99 };
     result = do_range(allocator, range, true);
     try expectEqual(99, result);
 
-    range = Range { 100, 115 };
+    range = Range{ 100, 115 };
     result = do_range(allocator, range, true);
     try expectEqual(0, result);
 
-    range = Range { 998, 999 };
+    range = Range{ 998, 999 };
     result = do_range(allocator, range, true);
     try expectEqual(0, result);
 
-    range = Range { 1000, 1012 };
+    range = Range{ 1000, 1012 };
     result = do_range(allocator, range, true);
     try expectEqual(1010, result);
 
-    range = Range { 1188511880, 1188511890 };
+    range = Range{ 1188511880, 1188511890 };
     result = do_range(allocator, range, true);
     try expectEqual(1188511885, result);
 
-    range = Range { 222220, 222224 };
+    range = Range{ 222220, 222224 };
     result = do_range(allocator, range, true);
     try expectEqual(222222, result);
 
-    range = Range { 1698522, 1698528 };
+    range = Range{ 1698522, 1698528 };
     result = do_range(allocator, range, true);
     try expectEqual(0, result);
 
-    range = Range { 446443, 446449 };
+    range = Range{ 446443, 446449 };
     result = do_range(allocator, range, true);
     try expectEqual(446446, result);
 
-    range = Range { 38593856, 38593862 };
+    range = Range{ 38593856, 38593862 };
     result = do_range(allocator, range, true);
     try expectEqual(38593859, result);
 
-    range = Range { 565653, 565659 };
+    range = Range{ 565653, 565659 };
     result = do_range(allocator, range, true);
     try expectEqual(0, result);
 
-    range = Range { 824824821, 824824827 };
+    range = Range{ 824824821, 824824827 };
     result = do_range(allocator, range, true);
     try expectEqual(0, result);
 
-    range = Range { 3081, 5416 };
+    range = Range{ 3081, 5416 };
     result = do_range(allocator, range, true);
-    try expectEqual(
-        3131 + 3232 + 3333 + 3434 + 3535 + 3636 + 3737 + 
+    try expectEqual(3131 + 3232 + 3333 + 3434 + 3535 + 3636 + 3737 +
         3838 + 3939 + 4040 + 4141 + 4242 + 4343 + 4444 +
         4545 + 4646 + 4747 + 4848 + 4949 + 5050 + 5151 +
-        5252 + 5353,
-    result);
+        5252 + 5353, result);
 }
 
 test "part two" {
@@ -301,62 +299,60 @@ test "part two" {
     const allocator = test_arena.allocator();
     defer _ = test_arena.reset(.free_all);
 
-    var range = Range { 11, 22 };
+    var range = Range{ 11, 22 };
     var result = do_range(allocator, range, false);
     try expectEqual(33, result);
 
-    range = Range { 95, 99 };
+    range = Range{ 95, 99 };
     result = do_range(allocator, range, false);
     try expectEqual(99, result);
 
-    range = Range { 100, 115 };
+    range = Range{ 100, 115 };
     result = do_range(allocator, range, false);
     try expectEqual(111, result);
 
-    range = Range { 998, 999 };
+    range = Range{ 998, 999 };
     result = do_range(allocator, range, false);
     try expectEqual(999, result);
 
-    range = Range { 1000, 1012 };
+    range = Range{ 1000, 1012 };
     result = do_range(allocator, range, false);
     try expectEqual(1010, result);
 
-    range = Range { 1188511880, 1188511890 };
+    range = Range{ 1188511880, 1188511890 };
     result = do_range(allocator, range, false);
     try expectEqual(1188511885, result);
 
-    range = Range { 222220, 222224 };
+    range = Range{ 222220, 222224 };
     result = do_range(allocator, range, false);
     try expectEqual(222222, result);
 
-    range = Range { 1698522, 1698528 };
+    range = Range{ 1698522, 1698528 };
     result = do_range(allocator, range, false);
     try expectEqual(0, result);
 
-    range = Range { 446443, 446449 };
+    range = Range{ 446443, 446449 };
     result = do_range(allocator, range, false);
     try expectEqual(446446, result);
 
-    range = Range { 38593856, 38593862 };
+    range = Range{ 38593856, 38593862 };
     result = do_range(allocator, range, false);
     try expectEqual(38593859, result);
 
-    range = Range { 565653, 565659 };
+    range = Range{ 565653, 565659 };
     result = do_range(allocator, range, false);
     try expectEqual(565656, result);
 
-    range = Range { 824824821, 824824827 };
+    range = Range{ 824824821, 824824827 };
     result = do_range(allocator, range, false);
     try expectEqual(824824824, result);
 
-    range = Range { 3081, 5416 };
+    range = Range{ 3081, 5416 };
     result = do_range(allocator, range, false);
-    try expectEqual(
-        3131 + 3232 + 3333 + 3434 + 3535 + 3636 + 3737 + 
+    try expectEqual(3131 + 3232 + 3333 + 3434 + 3535 + 3636 + 3737 +
         3838 + 3939 + 4040 + 4141 + 4242 + 4343 + 4444 +
         4545 + 4646 + 4747 + 4848 + 4949 + 5050 + 5151 +
-        5252 + 5353,
-    result);
+        5252 + 5353, result);
 }
 
 test "final" {

@@ -28,7 +28,7 @@ fn parse(allocator: Allocator, input: *Input) !std.ArrayList([]u8) {
 
     while (try input.reader.interface.takeDelimiter('\n')) |line| {
         result.appendAssumeCapacity(try chars_to_vals(allocator, line));
-    } 
+    }
 
     return result;
 }
@@ -52,7 +52,7 @@ fn solve_line(line: []u8, num_digits: usize) usize {
         var max: usize = 0;
         var max_pos: usize = 0;
 
-        const cur = line[start..(line.len - (num_digits-current_digit - 1))];
+        const cur = line[start..(line.len - (num_digits - current_digit - 1))];
         for (cur, start..) |digit, digit_pos| {
             if (digit > max) {
                 max = digit;
@@ -61,7 +61,7 @@ fn solve_line(line: []u8, num_digits: usize) usize {
             }
         }
 
-        last_digit_pos = max_pos; 
+        last_digit_pos = max_pos;
         acc = (acc * 10) + max;
     }
 

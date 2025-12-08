@@ -6,16 +6,16 @@ const Input = common.Input;
 
 const Dir = struct { isize, isize };
 
-const Up = Dir { 1, 0 };
-const UpLeft = Dir { 1, -1 };
-const UpRight = Dir { 1, 1 };
-const Down = Dir { -1, 0 };
-const DownLeft = Dir { -1, -1 };
-const DownRight = Dir { -1, 1 };
-const Left = Dir { 0, -1 };
-const Right = Dir { 0, 1 };
+const Up = Dir{ 1, 0 };
+const UpLeft = Dir{ 1, -1 };
+const UpRight = Dir{ 1, 1 };
+const Down = Dir{ -1, 0 };
+const DownLeft = Dir{ -1, -1 };
+const DownRight = Dir{ -1, 1 };
+const Left = Dir{ 0, -1 };
+const Right = Dir{ 0, 1 };
 
-const directions = [_]Dir {
+const directions = [_]Dir{
     Up,
     UpLeft,
     UpRight,
@@ -55,7 +55,7 @@ const Grid = struct {
                 }
             }
             self.h += 1;
-        } 
+        }
 
         return self;
     }
@@ -122,7 +122,7 @@ fn part02(grid: *Grid) usize {
     var acc: usize = 0;
     var remove_set: std.bit_set.ArrayBitSet(usize, 139 * 139) = .initFull();
 
-    while(true) {
+    while (true) {
         var should_remove = false;
         for (0..grid.w) |w| {
             for (0..grid.h) |h| {

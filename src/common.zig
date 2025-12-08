@@ -43,7 +43,7 @@ pub const Timer = struct {
     name: []const u8,
 
     pub fn init(name: []const u8) Timer {
-        return Timer {
+        return Timer{
             .name = name,
             .t = undefined,
             .ended_at = 0,
@@ -85,14 +85,14 @@ pub const Benchmark = struct {
         self.timers[self.n] = .init(name);
         self.n += 1;
 
-        return &self.timers[self.n-1];
+        return &self.timers[self.n - 1];
     }
 
     pub fn report(self: *Benchmark) void {
         std.debug.print("----------------- Summary ------------------\n", .{});
         for (0..self.n) |i| {
             const timer = self.timers[i];
-            std.debug.print("{s} Took {d}μs\n", .{timer.name, timer.ended_at/1000});
+            std.debug.print("{s} Took {d}μs\n", .{ timer.name, timer.ended_at / 1000 });
         }
         std.debug.print("--------------------------------------------\n", .{});
     }

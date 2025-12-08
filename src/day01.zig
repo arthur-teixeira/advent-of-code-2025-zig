@@ -1,6 +1,6 @@
 const std = @import("std");
 const Input = @import("common").Input;
-const Allocator = std.mem.Allocator; 
+const Allocator = std.mem.Allocator;
 const Benchmark = @import("common").Benchmark;
 
 fn parse_line(line: []const u8) !i16 {
@@ -67,9 +67,9 @@ fn do_round(acc: i16, val: i16) Round {
 
     const num_zeroes: i16 = if (round_result <= 0 and acc == 0)
         @divTrunc(-round_result, 100)
-    else if (round_result <= 0) 
+    else if (round_result <= 0)
         @divTrunc(-round_result, 100) + 1
-    else 
+    else
         @divTrunc(round_result, 100);
 
     return .{ new_acc, num_zeroes };
