@@ -49,7 +49,7 @@ const Line = struct {
     }
 
     inline fn eol(self: Line) bool {
-        return self.pos == self.buf.len;
+        return self.pos >= self.buf.len;
     }
 
     fn next_number(self: *Line) ?usize {
@@ -70,11 +70,16 @@ const Line = struct {
         if (self.eol()) return null;
 
         self.pos += 1;
-        switch (self.buf[self.pos - 1]) {
-            '*' => return .Mul,
-            '+' => return .Add,
+        const op: Operator = switch (self.buf[self.pos - 1]) {
+            '*' => .Mul,
+            '+' => .Add,
             else => unreachable,
+        };
+        self.skip_whitespaces();
+        if (self.eol()) {
+            self.pos += 1;
         }
+        return op;
     }
 };
 
@@ -106,6 +111,35 @@ const Homework = struct {
         const op = self.lines[self.num_lines - 1].next_operator() orelse unreachable;
         return op.do(operands[0..self.num_lines - 1]);
     }
+
+    fn reset(self: *Homework) void {
+        for (0..self.num_lines) |i| {
+            self.lines[i].pos = 0;
+        }
+    }
+
+    fn vertical(self: *Homework) ?usize {
+        const op_line = &self.lines[self.num_lines - 1];
+        const start = op_line.pos;
+        const op = op_line.next_operator() orelse return null;
+        const end = op_line.pos - 1;
+
+        var operands: [4]usize = undefined;
+        std.debug.assert(end - start <= 4);
+
+        for (start..end, 0..) |i, ii| {
+            var acc: usize = 0;
+            for (0..self.num_lines - 1) |j| {
+                const char = self.lines[j].buf[i];
+                if (char == ' ') continue;
+                const cur_digit = self.lines[j].buf[i] - '0';
+                acc = acc * 10 + cur_digit;
+            }
+            operands[ii] = acc;
+        }
+
+        return op.do(operands[0..end - start]);
+    }
 };
 
 
@@ -121,16 +155,25 @@ pub fn solve(allocator: Allocator, bench: *Benchmark, example: bool) !void {
     t1.start();
     const p1 = part01(&homework);
     t1.finish();
+    homework.reset();
     t2.start();
-    // const p2 = part02(inventory);
+    const p2 = part02(&homework);
     t2.finish();
     std.debug.print("\tPart 1: {d}\n", .{p1});
-    std.debug.print("\tPart 2: {d}\n", .{2});
+    std.debug.print("\tPart 2: {d}\n", .{p2});
 }
 
 fn part01(homework: *Homework) usize {
     var acc: usize = 0;
     while (homework.next_operation()) |op| {
+        acc += op;
+    }
+    return acc;
+}
+
+fn part02(homework: *Homework) usize {
+    var acc: usize = 0;
+    while (homework.vertical()) |op| {
         acc += op;
     }
     return acc;
