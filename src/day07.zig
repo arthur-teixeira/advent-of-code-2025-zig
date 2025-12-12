@@ -48,7 +48,6 @@ const FreqMap = struct {
 };
 
 pub fn solve(allocator: Allocator, bench: *Benchmark, example: bool) !void {
-
     var t1 = bench.add("Day 07 - Part 1");
     var t2 = bench.add("Day 07 - Part 2");
 

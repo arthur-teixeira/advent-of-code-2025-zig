@@ -45,14 +45,14 @@ const Range = struct {
 
 const expectEqual = std.testing.expectEqual;
 test "range intersection" {
-    try expectEqual((Range { .start = 1, .end = 20 }).intersection(Range { .start = 15, .end = 25 }), Range { .start = 1, .end = 25 });
-    try expectEqual((Range { .start = 1, .end = 20 }).intersection(Range { .start = 5, .end = 10 }), Range { .start = 1, .end = 20 });
-    try expectEqual((Range { .start = 1, .end = 20 }).intersection(Range { .start = 10, .end = 20 }), Range { .start = 1, .end = 20 });
-    try expectEqual((Range { .start = 1, .end = 20 }).intersection(Range { .start = 20, .end = 30 }), Range { .start = 1, .end = 30 });
-    try expectEqual((Range { .start = 1, .end = 20 }).intersection(Range { .start = 2, .end = 30 }), Range { .start = 1, .end = 30 });
-    try expectEqual((Range { .start = 1, .end = 20 }).intersection(Range { .start = 1, .end = 5 }), Range { .start = 1, .end = 20 });
-    try expectEqual((Range { .start = 1, .end = 20 }).intersection(Range { .start = 5, .end = 21 }), Range { .start = 1, .end = 21 });
-    try expectEqual((Range { .start = 1, .end = 20 }).intersection(Range { .start = 20, .end = 20 }), Range { .start = 1, .end = 20 });
+    try expectEqual((Range{ .start = 1, .end = 20 }).intersection(Range{ .start = 15, .end = 25 }), Range{ .start = 1, .end = 25 });
+    try expectEqual((Range{ .start = 1, .end = 20 }).intersection(Range{ .start = 5, .end = 10 }), Range{ .start = 1, .end = 20 });
+    try expectEqual((Range{ .start = 1, .end = 20 }).intersection(Range{ .start = 10, .end = 20 }), Range{ .start = 1, .end = 20 });
+    try expectEqual((Range{ .start = 1, .end = 20 }).intersection(Range{ .start = 20, .end = 30 }), Range{ .start = 1, .end = 30 });
+    try expectEqual((Range{ .start = 1, .end = 20 }).intersection(Range{ .start = 2, .end = 30 }), Range{ .start = 1, .end = 30 });
+    try expectEqual((Range{ .start = 1, .end = 20 }).intersection(Range{ .start = 1, .end = 5 }), Range{ .start = 1, .end = 20 });
+    try expectEqual((Range{ .start = 1, .end = 20 }).intersection(Range{ .start = 5, .end = 21 }), Range{ .start = 1, .end = 21 });
+    try expectEqual((Range{ .start = 1, .end = 20 }).intersection(Range{ .start = 20, .end = 20 }), Range{ .start = 1, .end = 20 });
 }
 
 const Inventory = struct {
@@ -67,12 +67,7 @@ fn parse_int_unchecked(s: []const u8) usize {
 }
 
 fn parse(input: *Input, bench: *Benchmark) !Inventory {
-    var inventory: Inventory = .{
-        .num_ranges = 0,
-        .ranges = @splat(.empty),
-        .ingredients = @splat(0),
-        .num_ingredients = 0
-    };
+    var inventory: Inventory = .{ .num_ranges = 0, .ranges = @splat(.empty), .ingredients = @splat(0), .num_ingredients = 0 };
 
     while (try input.reader.interface.takeDelimiter('\n')) |line| {
         if (line.len == 0) {
@@ -82,16 +77,16 @@ fn parse(input: *Input, bench: *Benchmark) !Inventory {
         const sep = std.mem.indexOfScalar(u8, line, '-').?;
 
         const start = std.fmt.parseInt(usize, line[0..sep], 10) catch unreachable;
-        const end = std.fmt.parseInt(usize, line[sep+1..], 10) catch unreachable;
+        const end = std.fmt.parseInt(usize, line[sep + 1 ..], 10) catch unreachable;
 
-        inventory.ranges[inventory.num_ranges] = Range { .start = start, .end = end };
+        inventory.ranges[inventory.num_ranges] = Range{ .start = start, .end = end };
         inventory.num_ranges += 1;
-    } 
+    }
 
     while (try input.reader.interface.takeDelimiter('\n')) |line| {
         inventory.ingredients[inventory.num_ingredients] = parse_int_unchecked(line);
         inventory.num_ingredients += 1;
-    } 
+    }
     var t = bench.add("DAY 05 - MERGING RANGES");
 
     std.mem.sort(usize, &inventory.ingredients, {}, std.sort.asc(usize));

@@ -4,13 +4,9 @@ pub fn dayModule(b: *std.Build, target: std.Build.ResolvedTarget, common: *std.B
     const dayname = b.fmt("day{d:0>2}", .{day});
     const path = b.fmt("src/day{d:0>2}.zig", .{day});
 
-    return b.addModule(dayname, .{
-        .root_source_file = b.path(path),
-        .target = target,
-        .imports = &.{
-            .{ .name = "common", .module = common },
-        }
-    });
+    return b.addModule(dayname, .{ .root_source_file = b.path(path), .target = target, .imports = &.{
+        .{ .name = "common", .module = common },
+    } });
 }
 
 pub fn build(b: *std.Build) void {
@@ -21,13 +17,13 @@ pub fn build(b: *std.Build) void {
         .target = target,
     });
 
-    const days = 7;
+    const days = 8;
 
-    var imports: [days+1]std.Build.Module.Import = undefined;
+    var imports: [days + 1]std.Build.Module.Import = undefined;
     imports[0] = .{ .name = "common", .module = mod_common };
     const test_step = b.step("test", "Run tests");
 
-    for (1..days+1) |day| {
+    for (1..days + 1) |day| {
         const dayname = b.fmt("day{d:0>2}", .{day});
         const module = dayModule(b, target, mod_common, day);
         imports[day] = .{ .name = dayname, .module = module };
